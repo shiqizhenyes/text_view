@@ -3,39 +3,62 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
-import 'package:text_view/text_view_controller.dart';
 
 
-typedef void TextViewCreatedCallback(TextViewController controller);
+typedef void TextViewCreatedCallback(String result, int id);
 
-class TextView extends StatefulWidget {
+class TextView extends StatefulWidget{
 
-  static const MethodChannel _channel =
-      const MethodChannel('text_view');
+  TextView({Key key,@required this.text, this.textSize, this.createdCallback})
+      : super(key: key);
 
-  static Future<String> get platformVersion async {
-    final String version = await _channel.invokeMethod('getPlatformVersion');
-    return version;
-  }
+  final String text;
 
-
-  TextView({Key key, this.createdCallback}) : super(key: key);
+  final double textSize;
 
   final TextViewCreatedCallback createdCallback;
 
+  static String _viewType = "me.nice/text_view";
+
+  static MethodChannel _channel = _channel = MethodChannel(_viewType);
+
+  static Future<String> get platformVersion async {
+    try {
+      final String version = await _channel.invokeMethod('getPlatformVersion');
+      return version;
+    }catch (e) {
+      return "unknown";
+    }
+  }
+
   @override
   _TextViewState createState() => _TextViewState();
+
 }
 
 class _TextViewState extends State<TextView> {
 
-  final _viewType = "me.nice/text_view";
+  @override
+  void initState() {
+    super.initState();
+    TextView._channel.setMethodCallHandler((call) async {
+      if(call.method == "platformViewCreated") {
+        TextView._channel.invokeMethod("setText", widget.text);
+        TextView._channel.invokeMethod("setTextSize", widget.textSize);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     if (Platform.isAndroid) {
       return AndroidView(
-        viewType: _viewType,
+        viewType: TextView._viewType+"_${Platform.operatingSystem}",
+        onPlatformViewCreated: _onPlatformViewCreated,
+      );
+    } else if (Platform.isIOS){
+      return UiKitView(
+        viewType: TextView._viewType+"_${Platform.operatingSystem}",
         onPlatformViewCreated: _onPlatformViewCreated,
       );
     }
@@ -43,12 +66,10 @@ class _TextViewState extends State<TextView> {
   }
 
   void _onPlatformViewCreated(int id) {
-    print("view id $id");
     if (widget.createdCallback == null) {
       return;
     }
-    widget.createdCallback(TextViewController(id: id));
+    widget.createdCallback("success", id);
   }
-
 
 }

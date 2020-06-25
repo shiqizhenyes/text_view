@@ -8,35 +8,27 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.platform.PlatformView
 
-class FlutterTextView(context: Context, messenger: BinaryMessenger, id: Int)
-    : PlatformView, MethodChannel.MethodCallHandler{
+class FlutterTextView(context: Context, id: Int) : PlatformView{
 
-    private val textView : TextView = TextView(context)
+    private var textView : TextView? = TextView(context)
 
-    private val methodChannel: MethodChannel = MethodChannel(messenger,"plugin.nice.me/text_view_$id")
-
-    init {
-        methodChannel.setMethodCallHandler(this)
-    }
-
-    override fun getView(): View {
+    override fun getView(): TextView? {
         return textView
     }
 
     override fun dispose() {
+        textView = null
     }
 
-    private fun setText(text: String?) {
-        textView.text = text
+    fun getHashcode(): Int {
+        return hashCode()
     }
 
-    override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
-        if (call.method == "setText") {
-            val text = call.arguments
-            setText(text as String?)
-            result.success(text)
-        } else {
-            result.notImplemented()
-        }
+    fun setText(text: String?) {
+        textView?.text = text
+    }
+
+    fun setTextSize(textSize: Float) {
+        textView?.textSize = textSize
     }
 }

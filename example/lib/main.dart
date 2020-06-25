@@ -57,9 +57,10 @@ class _MyAppState extends State<MyApp> {
               Container(
                 height: 100.0,
                 child: TextView(
-                  createdCallback: (controller) {
-                    print("zack");
-                    controller.setText("hello from android");
+                  text: "hello form android",
+                  textSize: 20.0,
+                  createdCallback: (result, id) {
+                    print("result $result id $id");
                   },
                 ),
               )
